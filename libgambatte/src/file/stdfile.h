@@ -23,31 +23,62 @@ Free Software Foundation, Inc.,
 #define GAMBATTE_STD_FILE_H
 
 #include "file.h"
-#include <fstream>
+#include <string.h>
+
+// For panic()
+#include "pico.h"
+
+// This originally used regular C++ fstream. Now uses a static manifest of
+// some blobs in flash (poor man's FS).
+
+// Static file table, ends with sentinel value with null name.
+extern const file_entry file_manifest;
 
 namespace gambatte {
 
 class StdFile : public File {
 public:
 	explicit StdFile(char const *filename)
-	: stream_(filename, std::ios::in | std::ios::binary)
-	, fsize_(0)
+	: fsize_(0), get_ptr_(0), flash_resource_(0)
 	{
-		if (stream_) {
-			stream_.seekg(0, std::ios::end);
-			fsize_ = stream_.tellg();
-			stream_.seekg(0, std::ios::beg);
+		int i;
+		for (i = 0; (&file_manifest)[i].name; ++i)
+		{
+			const char *p = (&file_manifest)[i].name, *q = filename;
+			bool match = true;
+			do {
+				match = match && *p == *q;
+			} while (*p++ && *q++);
+
+			if (!match)
+			{
+				fsize_ = (&file_manifest)[i].size;
+				flash_resource_ = (&file_manifest)[i].resource;
+				break;
+			}
+		}
+		if (!(&file_manifest)[i].name) {
+			panic("Couldn't find file %s\n", filename);
 		}
 	}
 
-	virtual void rewind() { stream_.seekg(0, std::ios::beg); }
+	virtual void rewind() { get_ptr_ = 0; }
 	virtual std::size_t size() const { return fsize_; };
-	virtual void read(char *buffer, std::size_t amount) { stream_.read(buffer, amount); }
-	virtual bool fail() const { return stream_.fail(); }
+	virtual void read(char *buffer, std::size_t amount)
+	{
+		if (fsize_ - get_ptr_ < amount)
+			amount = fsize_ - get_ptr_;
+		memcpy(buffer, flash_resource_, amount);
+		get_ptr_ += amount;
+	}
+	virtual bool fail() const { return flash_resource_ == NULL; }
+	// Get pointer to raw flash resource, for zero-copy read-only use
+	virtual const char* getraw() const {return flash_resource_;}
 
 private:
-	std::ifstream stream_;
 	std::size_t fsize_;
+	size_t get_ptr_;
+	const char *flash_resource_;
 };
 
 }

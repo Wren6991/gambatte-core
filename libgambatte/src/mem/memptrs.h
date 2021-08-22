@@ -59,10 +59,11 @@ public:
 
 	unsigned char const * rmem(unsigned area) const { return rmem_[area]; }
 	unsigned char * wmem(unsigned area) const { return wmem_[area]; }
-	unsigned char * romdata() const { return memchunk_ + pre_rom_pad_size(); }
-	unsigned char * romdata(unsigned area) const { return romdata_[area]; }
-	unsigned char * romdataend() const { return rambankdata_ - max_num_vrambanks * vrambank_size(); }
-	unsigned char * vramdata() const { return romdataend(); }
+	// Patch: romdata needs to be const because it's in flash
+	const unsigned char * romdata() const { return (const unsigned char*)rom_flash_ptr_; }
+	const unsigned char * romdata(unsigned area) const { return romdata_[area]; }
+	const unsigned char * romdataend() const { return romdata() +  n_rom_banks_ * rombank_size(); }
+	unsigned char * vramdata() const { return rambankdata_ - max_num_vrambanks * vrambank_size(); }
 	unsigned char * vramdataend() const { return rambankdata_; }
 	unsigned char * rambankdata() const { return rambankdata_; }
 	unsigned char * rambankdataend() const { return wramdata_[0]; }
@@ -75,6 +76,13 @@ public:
 	OamDmaSrc oamDmaSrc() const { return oamDmaSrc_; }
 	bool isInOamDmaConflictArea(unsigned p) const;
 
+	// Replaces the read() into RAM buffer (!)
+	void SetRomResource(const char *res) {
+		rom_flash_ptr_ = res;
+		// Need to initialise this too because it gets set to garbage during reset():
+		romdata_[0] = (const unsigned char*)res;
+	}
+
 	void setRombank0(unsigned bank);
 	void setRombank(unsigned bank);
 	void setRambank(unsigned ramFlags, unsigned rambank);
@@ -86,7 +94,8 @@ public:
 private:
 	unsigned char const *rmem_[0x10];
 	unsigned char       *wmem_[0x10];
-	unsigned char *romdata_[2];
+	// Patch: romdata needs to be const because it's in flash
+	const unsigned char *romdata_[2];
 	unsigned char *wramdata_[2];
 	unsigned char *vrambankptr_;
 	unsigned char *rsrambankptr_;
@@ -96,6 +105,9 @@ private:
 	unsigned char *wramdataend_;
 	OamDmaSrc oamDmaSrc_;
 
+	const char *rom_flash_ptr_;
+
+	unsigned n_rom_banks_;
 	unsigned curRomBank_;
 
 	int memchunk_len;

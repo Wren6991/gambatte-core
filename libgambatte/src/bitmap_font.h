@@ -54,32 +54,32 @@ extern unsigned char const *const font[];
 
 template<class RandomAccessIterator, class Fill>
 void print(RandomAccessIterator dest, std::ptrdiff_t const pitch, Fill fill, char const *chars) {
-	while (int const character = *chars++) {
-		RandomAccessIterator dst = dest;
-		unsigned char const *s = font[character];
-		unsigned const width = *s >> 4;
-		unsigned h = *s++ & 0xF;
+	// while (int const character = *chars++) {    FIXME wtf
+	// 	RandomAccessIterator dst = dest;
+	// 	unsigned char const *s = font[character];
+	// 	unsigned const width = *s >> 4;
+	// 	unsigned h = *s++ & 0xF;
 
-		while (h--) {
-			RandomAccessIterator d = dst;
-			unsigned line = *s++;
+	// 	while (h--) {
+	// 		RandomAccessIterator d = dst;
+	// 		unsigned line = *s++;
 
-			if (width > 8)
-				line |= *s++ << 8;
+	// 		if (width > 8)
+	// 			line |= *s++ << 8;
 
-			while (line) {
-				if (line & 1)
-					fill(d, pitch);
+	// 		while (line) {
+	// 			if (line & 1)
+	// 				fill(d, pitch);
 
-				line >>= 1;
-				++d;
-			}
+	// 			line >>= 1;
+	// 			++d;
+	// 		}
 
-			dst += pitch;
-		}
+	// 		dst += pitch;
+	// 	}
 
-		dest += width;
-	}
+	// 	dest += width;
+	// }
 }
 
 }

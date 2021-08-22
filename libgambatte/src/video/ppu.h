@@ -26,6 +26,7 @@
 #include "newstate.h"
 
 #include <cstddef>
+#include <cstdint>
 
 namespace gambatte {
 
@@ -41,18 +42,18 @@ enum {
 class PPUFrameBuf {
 public:
 	PPUFrameBuf() : buf_(0), fbline_(nullfbline()), pitch_(0) {}
-	uint_least32_t * fb() const { return buf_; }
-	uint_least32_t * fbline() const { return fbline_; }
+	uint16_t * fb() const { return buf_; }
+	uint16_t * fbline() const { return fbline_; }
 	std::ptrdiff_t pitch() const { return pitch_; }
-	void setBuf(uint_least32_t *buf, std::ptrdiff_t pitch) { buf_ = buf; pitch_ = pitch; fbline_ = nullfbline(); }
+	void setBuf(uint16_t *buf, std::ptrdiff_t pitch) { buf_ = buf; pitch_ = pitch; fbline_ = nullfbline(); }
 	void setFbline(unsigned ly) { fbline_ = buf_ ? buf_ + std::ptrdiff_t(ly) * pitch_ : nullfbline(); }
 
 private:
-	uint_least32_t *buf_;
-	uint_least32_t *fbline_;
+	uint16_t *buf_;
+	uint16_t *fbline_;
 	std::ptrdiff_t pitch_;
 
-	static uint_least32_t * nullfbline() { static uint_least32_t nullfbline_[160]; return nullfbline_; }
+	static uint16_t * nullfbline() { static uint16_t nullfbline_[160]; return nullfbline_; }
 };
 
 struct PPUPriv;
@@ -142,7 +143,7 @@ public:
 	void setCgbDmg(bool enabled) { p_.cgbDmg = enabled; }
 	void resetCc(unsigned long oldCc, unsigned long newCc);
 	void saveState(SaveState &ss) const;
-	void setFrameBuf(uint_least32_t *buf, std::ptrdiff_t pitch) { p_.framebuf.setBuf(buf, pitch); }
+	void setFrameBuf(uint16_t *buf, std::ptrdiff_t pitch) { p_.framebuf.setBuf(buf, pitch); }
 	void setLcdc(unsigned lcdc, unsigned long cc);
 	void setScx(unsigned scx) { p_.scx = scx; }
 	void setScy(unsigned scy) { p_.scy = scy; }

@@ -23,6 +23,7 @@
 #include "newstate.h"
 
 #include <cstddef>
+#include <cstdint>
 
 namespace gambatte {
 
@@ -37,7 +38,7 @@ public:
 
 	unsigned getJoypadIndex() { return joypadIndex; }
 
-	void setVideoBuffer(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
+	void setVideoBuffer(uint16_t *videoBuf, std::ptrdiff_t pitch) {
 		videoBuf_ = videoBuf;
 		pitch_ = pitch;
 	}
@@ -45,9 +46,9 @@ public:
 	unsigned long gbcToRgb32(const unsigned bgr15);
 
 	void setCgbPalette(unsigned *lut) {
-		for (int i = 0; i < 32768; i++)
-			cgbColorsRgb32_[i] = lut[i];
-		refreshPalettes();
+		// for (int i = 0; i < 32768; i++)
+		// 	cgbColorsRgb32_[i] = lut[i];
+		// refreshPalettes();
 	}
 
 	void onJoypad(unsigned data);
@@ -55,7 +56,8 @@ public:
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:
-	unsigned long cgbColorsRgb32_[32768];
+	// (gets spray bottle) no! bad!
+	// unsigned long cgbColorsRgb32_[32768];
 
 	unsigned char transfer;
 	unsigned char packet[0x10];
@@ -65,7 +67,7 @@ private:
 	unsigned char joypadIndex;
 	unsigned char joypadMask;
 
-	uint_least32_t *videoBuf_;
+	uint16_t *videoBuf_;
 	std::ptrdiff_t pitch_;
 
 	unsigned short systemColors[512 * 4];

@@ -60,7 +60,7 @@ public:
 	unsigned char const * rmem(unsigned area) const { return memptrs_.rmem(area); }
 	unsigned char * wmem(unsigned area) const { return memptrs_.wmem(area); }
 	unsigned char * vramdata() const { return memptrs_.vramdata(); }
-	unsigned char * romdata(unsigned area) const { return memptrs_.romdata(area); }
+	const unsigned char * romdata(unsigned area) const { return memptrs_.romdata(area); }
 	unsigned char * wramdata(unsigned area) const { return memptrs_.wramdata(area); }
 	unsigned char const * rdisabledRam() const { return memptrs_.rdisabledRam(); }
 	unsigned char const * rsrambankptr() const { return memptrs_.rsrambankptr(); }

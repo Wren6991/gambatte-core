@@ -58,7 +58,7 @@ public:
 	void loadState(SaveState const &state, unsigned char const *oamram);
 	void setDmgPaletteColor(unsigned palNum, unsigned colorNum, unsigned long rgb32);
 	void setCgbPalette(unsigned *lut);
-	void setVideoBuffer(uint_least32_t *videoBuf, std::ptrdiff_t pitch);
+	void setVideoBuffer(uint16_t *videoBuf, std::ptrdiff_t pitch);
 	void setLayers(unsigned mask) { ppu_.setLayers(mask); }
 	void copyCgbPalettesToDmg();
 	void setOsdElement(transfer_ptr<OsdElement> osdElement) { osdElement_ = osdElement; }
@@ -227,7 +227,8 @@ private:
 
 	PPU ppu_;
 	unsigned short dmgColorsBgr15_[3 * 4];
-	unsigned long  cgbColorsRgb32_[32768];
+	// 128 kB!
+	// unsigned long  cgbColorsRgb32_[32768];
 	unsigned char  bgpData_[2 * max_num_palettes * num_palette_entries];
 	unsigned char objpData_[2 * max_num_palettes * num_palette_entries];
 	EventTimes eventTimes_;

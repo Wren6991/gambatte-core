@@ -358,7 +358,7 @@ namespace M3Start {
 
 namespace M3Loop {
 
-void doFullTilesUnrolledDmg(PPUPriv &p, int const xend, uint_least32_t *const dbufline,
+void doFullTilesUnrolledDmg(PPUPriv &p, int const xend, uint16_t *const dbufline,
 		unsigned char const *const tileMapLine, unsigned const tileline, unsigned tileMapXpos) {
 	int const tileIndexSign = p.lcdc & lcdc_tdsel ? 0 : tile_pattern_table_size / tile_size / 2;
 	unsigned char const *const tileDataLine = p.vram + 2 * tile_size * tileIndexSign
@@ -419,8 +419,8 @@ void doFullTilesUnrolledDmg(PPUPriv &p, int const xend, uint_least32_t *const db
 			p.cycles -= n;
 
 			unsigned ntileword = p.ntileword;
-			uint_least32_t *dst = dbufline + xpos - tile_len;
-			uint_least32_t *const dstend = dst + n;
+			uint16_t *dst = dbufline + xpos - tile_len;
+			uint16_t *const dstend = dst + n;
 			xpos += n;
 
 			if (!(p.speedupFlags & GB::NO_VIDEO)) {
@@ -462,7 +462,7 @@ void doFullTilesUnrolledDmg(PPUPriv &p, int const xend, uint_least32_t *const db
 		}
 
 		if (!(p.speedupFlags & GB::NO_VIDEO)) {
-			uint_least32_t *const dst = dbufline + (xpos - tile_len);
+			uint16_t *const dst = dbufline + (xpos - tile_len);
 			unsigned const tileword = -((p.lcdc & 1u * lcdc_bgen) & p.layersMask) & p.ntileword;
 
 			dst[0] = p.bgPalette[ tileword & tile_bpp_mask                                 ];
@@ -499,7 +499,7 @@ void doFullTilesUnrolledDmg(PPUPriv &p, int const xend, uint_least32_t *const db
 					long spword = p.spwordList[i];
 					unsigned long const *const spPalette = p.spPalette
 						+ (attrib & attr_dmgpalno) / (attr_dmgpalno / num_palette_entries);
-					uint_least32_t *d = dst + pos;
+					uint16_t *d = dst + pos;
 
 					if (!(attrib & attr_bgpriority)) {
 						int const bpp = tile_bpp, m = tile_bpp_mask;
@@ -558,7 +558,7 @@ void doFullTilesUnrolledDmg(PPUPriv &p, int const xend, uint_least32_t *const db
 	p.xpos = xpos;
 }
 
-void doFullTilesUnrolledCgb(PPUPriv &p, int const xend, uint_least32_t *const dbufline,
+void doFullTilesUnrolledCgb(PPUPriv &p, int const xend, uint16_t *const dbufline,
 		unsigned char const *const tileMapLine, unsigned const tileline, unsigned tileMapXpos) {
 	int const tileIndexSign = p.lcdc & lcdc_tdsel ? 0 : tile_pattern_table_size / tile_size / 2;
 	unsigned char const *const tileDataLine = p.vram + 2 * tile_size * tileIndexSign
@@ -613,8 +613,8 @@ void doFullTilesUnrolledCgb(PPUPriv &p, int const xend, uint_least32_t *const db
 
 			unsigned ntileword = p.ntileword;
 			unsigned nattrib = -(p.layersMask & layer_mask_bg) & p.nattrib;
-			uint_least32_t *dst = dbufline + xpos - tile_len;
-			uint_least32_t *const dstend = dst + n;
+			uint16_t *dst = dbufline + xpos - tile_len;
+			uint16_t *const dstend = dst + n;
 			xpos += n;
 
 			if (!(p.speedupFlags & GB::NO_VIDEO)) {
@@ -664,7 +664,7 @@ void doFullTilesUnrolledCgb(PPUPriv &p, int const xend, uint_least32_t *const db
 		}
 
 		if (!(p.speedupFlags & GB::NO_VIDEO)) {
-			uint_least32_t *const dst = dbufline + (xpos - tile_len);
+			uint16_t *const dst = dbufline + (xpos - tile_len);
 			unsigned const tileword = -(p.layersMask & layer_mask_bg) & (((p.lcdc & 1u * lcdc_bgen) | !p.cgbDmg) * p.ntileword);
 			unsigned const attrib   = -(p.layersMask & layer_mask_bg) & p.nattrib;
 			unsigned long const *const bgPalette = p.bgPalette
@@ -709,7 +709,7 @@ void doFullTilesUnrolledCgb(PPUPriv &p, int const xend, uint_least32_t *const db
 
 					if (!((attrib | sattrib) & bgprioritymask)) {
 						unsigned char  *const idt = idtab + pos;
-						uint_least32_t *const   d =   dst + pos;
+						uint16_t *const   d =   dst + pos;
 
 						switch (n) {
 						case 8: if ((spword >> 7 * tile_bpp) && id < idt[7]) {
@@ -808,7 +808,7 @@ void doFullTilesUnrolled(PPUPriv &p) {
 	if (xpos >= xend)
 		return;
 
-	uint_least32_t *const dbufline = p.framebuf.fbline();
+	uint16_t *const dbufline = p.framebuf.fbline();
 	unsigned char const *tileMapLine;
 	unsigned tileline;
 	unsigned tileMapXpos;
@@ -827,7 +827,7 @@ void doFullTilesUnrolled(PPUPriv &p) {
 	}
 
 	if (xpos < tile_len) {
-		uint_least32_t prebuf[2 * tile_len];
+		uint16_t prebuf[2 * tile_len];
 		if (p.cgb) {
 			doFullTilesUnrolledCgb(p, std::min(tile_len, xend), prebuf + (tile_len - xpos),
 			                       tileMapLine, tileline, tileMapXpos);
@@ -868,7 +868,7 @@ void plotPixel(PPUPriv &p) {
 	}
 
 	if (!(p.speedupFlags & GB::NO_VIDEO)) {
-		uint_least32_t *const fbline = p.framebuf.fbline();
+		uint16_t *const fbline = p.framebuf.fbline();
 
 		unsigned const twdata = tileword & (((p.lcdc & lcdc_bgen) | (p.cgb * !p.cgbDmg)) & p.layersMask) * tile_bpp_mask;
 		unsigned long pixel = p.bgPalette[twdata + (p.attrib & attr_cgbpalno & -(p.layersMask & layer_mask_bg)) * num_palette_entries];

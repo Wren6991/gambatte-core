@@ -39,7 +39,7 @@ static const std::size_t stateSavedWidth  = getWidth(stateSaved);
 
 class ShadedTextOsdElment : public OsdElement {
 	struct ShadeFill {
-		void operator()(uint_least32_t *dest, const std::ptrdiff_t pitch) const {
+		void operator()(uint16_t *dest, const std::ptrdiff_t pitch) const {
 			dest[2] = dest[1] = dest[0] = 0x000000ul;
 			dest += pitch;
 			dest[2] = dest[0] = 0x000000ul;
@@ -48,11 +48,11 @@ class ShadedTextOsdElment : public OsdElement {
 		}
 	};
 
-	Array<uint_least32_t> const pixels;
+	Array<uint16_t> const pixels;
 	unsigned life;
 public:
 	ShadedTextOsdElment(unsigned w, const char *txt);
-	const uint_least32_t* update();
+	const uint16_t* update();
 };
 
 ShadedTextOsdElment::ShadedTextOsdElment(unsigned width, const char *txt)
@@ -77,7 +77,7 @@ ShadedTextOsdElment::ShadedTextOsdElment(unsigned width, const char *txt)
 	bitmapfont::print(pixels.get() + 1 * w() + 1, w(), 0xE0E0E0ul , txt);
 }
 
-const uint_least32_t* ShadedTextOsdElment::update() {
+const uint16_t* ShadedTextOsdElment::update() {
 	if (life--)
 		return pixels;
 
@@ -85,12 +85,12 @@ const uint_least32_t* ShadedTextOsdElment::update() {
 }
 
 /*class FramedTextOsdElment : public OsdElement {
-	Array<uint_least32_t> const pixels;
+	Array<uint16_t> const pixels;
 	unsigned life;
 
 public:
 	FramedTextOsdElment(unsigned w, const char *txt);
-	const uint_least32_t* update();
+	const uint16_t* update();
 };
 
 FramedTextOsdElment::FramedTextOsdElment(unsigned width, const char *txt) :
@@ -101,7 +101,7 @@ life(4 * 60) {
 	print(pixels + (w() - width) / 2 + std::size_t(h() - HEIGHT) / 2 * w(), w(), 0xA0A0A0ul, txt);
 }
 
-const uint_least32_t* FramedTextOsdElment::update() {
+const uint16_t* FramedTextOsdElment::update() {
 	if (life--)
 		return pixels;
 
@@ -109,12 +109,12 @@ const uint_least32_t* FramedTextOsdElment::update() {
 }*/
 
 class SaveStateOsdElement : public OsdElement {
-	uint_least32_t pixels[StateSaver::ss_width * StateSaver::ss_height];
+	uint16_t pixels[StateSaver::ss_width * StateSaver::ss_height];
 	unsigned life;
 
 public:
 	SaveStateOsdElement(const std::string &fileName, unsigned stateNo);
-	const uint_least32_t* update();
+	const uint16_t* update();
 };
 
 SaveStateOsdElement::SaveStateOsdElement(const std::string &fileName, unsigned stateNo)
@@ -138,7 +138,7 @@ SaveStateOsdElement::SaveStateOsdElement(const std::string &fileName, unsigned s
 	}
 }
 
-const uint_least32_t* SaveStateOsdElement::update() {
+const uint16_t* SaveStateOsdElement::update() {
 	if (life--)
 		return pixels;
 

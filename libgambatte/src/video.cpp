@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <cstdint>
 
 using namespace gambatte;
 
@@ -95,7 +96,10 @@ bool isHdmaPeriod(LyCounter const &lyCounter,
 } // unnamed namespace.
 
 unsigned long LCD::gbcToRgb32(unsigned const bgr15) {
-	return cgbColorsRgb32_[bgr15 & 0x7FFF];
+	// return cgbColorsRgb32_[bgr15 & 0x7FFF]; 
+
+	// In spite of the name, this converts RGB555 to RGB565
+	return (bgr15 & 0x1f) | (bgr15 & 0x7fe) << 1;
 }
 
 void LCD::setDmgPalette(unsigned long palette[], unsigned short const dmgColors[], unsigned data) {
@@ -104,8 +108,8 @@ void LCD::setDmgPalette(unsigned long palette[], unsigned short const dmgColors[
 }
 
 void LCD::setCgbPalette(unsigned *lut) {
-	for (int i = 0; i < 32768; i++)
-		cgbColorsRgb32_[i] = lut[i];
+	// for (int i = 0; i < 32768; i++)
+	// 	cgbColorsRgb32_[i] = lut[i];
 	refreshPalettes();
 }
 
@@ -122,12 +126,14 @@ LCD::LCD(unsigned char const *oamram, unsigned char const *vram,
 	for (int i = 0; i < 3 * 4; ++i)
 		dmgColorsBgr15_[i] = (3 - (i & 3)) * 0x294A + !(i & 3) * 0x421;
 
-	// FIXME: this code is ugly
-	int i = 0;
-	for (int b = 0; b < 32; b++)
-		for (int g = 0; g < 32; g++)
-			for (int r = 0; r < 32; r++)
-				cgbColorsRgb32_[i++] = ((b * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((r * 255 + 15) / 31) << 16) | 255 << 24;
+	// 128 kB colour LUT was removed for RP2040
+
+	// // FIXME: this code is ugly
+	// int i = 0;
+	// for (int b = 0; b < 32; b++)
+	// 	for (int g = 0; g < 32; g++)
+	// 		for (int r = 0; r < 32; r++)
+	// 			cgbColorsRgb32_[i++] = ((b * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((r * 255 + 15) / 31) << 16) | 255 << 24;
 
 	std::memset( bgpData_, 0, sizeof  bgpData_);
 	std::memset(objpData_, 0, sizeof objpData_);
@@ -221,7 +227,7 @@ void LCD::copyCgbPalettesToDmg() {
 namespace {
 
 template <class Blend>
-void blitOsdElement(uint_least32_t *d, uint_least32_t const *s,
+void blitOsdElement(uint16_t *d, uint16_t const *s,
 		unsigned const width, unsigned h, std::ptrdiff_t const dpitch,
 		Blend blend)
 {
@@ -238,13 +244,13 @@ struct Blend {
 	enum { sw = weight - 1 };
 	enum { lowmask = sw * 0x010101l };
 
-	uint_least32_t operator()(uint_least32_t s, uint_least32_t d) const {
+	uint16_t operator()(uint16_t s, uint16_t d) const {
 		return (s * sw + d - (((s & lowmask) * sw + (d & lowmask)) & lowmask)) / weight;
 	}
 };
 
 template <typename T>
-void clear(T *buf, unsigned long color, std::ptrdiff_t dpitch) {
+void clear(T *buf, uint16_t color, std::ptrdiff_t dpitch) {
 	for (unsigned lines = lcd_vres; lines > 0; --lines, buf += dpitch)
 		std::fill_n(buf, 1 * lcd_hres, color);
 }
@@ -262,8 +268,8 @@ void LCD::updateScreen(bool const blanklcd, unsigned long const cycleCounter, un
 		break;
 	case 1:
 		if (ppu_.frameBuf().fb() && osdElement_) {
-			if (uint_least32_t const *const s = osdElement_->update()) {
-				uint_least32_t *const d = ppu_.frameBuf().fb()
+			if (uint16_t const *const s = osdElement_->update()) {
+				uint16_t *const d = ppu_.frameBuf().fb()
 					+ std::ptrdiff_t(osdElement_->y()) * ppu_.frameBuf().pitch()
 					+ osdElement_->x();
 
@@ -287,13 +293,13 @@ void LCD::updateScreen(bool const blanklcd, unsigned long const cycleCounter, un
 void LCD::whiteScreen() {
 	// TODO: Use during DMG stop mode
 	if (ppu_.frameBuf().fb())
-		clear(ppu_.frameBuf().fb(), 0xFFFFFFFF, ppu_.frameBuf().pitch());
+		clear(ppu_.frameBuf().fb(), 0xFFFF, ppu_.frameBuf().pitch());
 }
 
 void LCD::blackScreen() {
 	// TODO: Use during Mode 1 CGB stop mode
 	if (ppu_.frameBuf().fb())
-		clear(ppu_.frameBuf().fb(), 0xFF000000, ppu_.frameBuf().pitch());
+		clear(ppu_.frameBuf().fb(), 0x0000, ppu_.frameBuf().pitch());
 }
 
 void LCD::resetCc(unsigned long const oldCc, unsigned long const newCc) {
@@ -922,7 +928,7 @@ void LCD::update(unsigned long const cycleCounter) {
 	ppu_.update(cycleCounter);
 }
 
-void LCD::setVideoBuffer(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
+void LCD::setVideoBuffer(uint16_t *videoBuf, std::ptrdiff_t pitch) {
 	ppu_.setFrameBuf(videoBuf, pitch);
 }
 
@@ -943,7 +949,7 @@ void LCD::setDmgPaletteColor(unsigned palNum, unsigned colorNum, unsigned long r
 SYNCFUNC(LCD) {
 	SSS(ppu_);
 	NSS(dmgColorsBgr15_);
-	NSS(cgbColorsRgb32_);
+	// NSS(cgbColorsRgb32_);
 	NSS(bgpData_);
 	NSS(objpData_);
 	SSS(eventTimes_);

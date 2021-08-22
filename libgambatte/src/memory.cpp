@@ -25,7 +25,7 @@
 
 #include <algorithm>
 #include <cstring>
-#include <zlib.h>
+// #include <zlib.h>
 
 using namespace gambatte;
 
@@ -1369,13 +1369,16 @@ LoadRes Memory::loadROM(std::string const &romfile, unsigned const flags) {
 	lcd_.reset(ioamhram_, cart_.vramdata(), cart_.isCgb(), agbFlag_);
 	interrupter_.setGameShark(std::string());
 
-	if (agbFlag_ && (crc32(0, bios_, biosSize_) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal 
-		bios_[0xF3] ^= 0x03;
-		for (int i = 0xF5; i < 0xFB; i++)
-			bios_[i] = bios_[i + 1];
 
-		bios_[0xFB] ^= 0x74;
-	}
+	// FIXME presumably this breaks agb support but idk where crc32 is defined
+
+	// if (agbFlag_ && (crc32(0, bios_, biosSize_) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal 
+	// 	bios_[0xF3] ^= 0x03;
+	// 	for (int i = 0xF5; i < 0xFB; i++)
+	// 		bios_[i] = bios_[i + 1];
+
+	// 	bios_[0xFB] ^= 0x74;
+	// }
 
 	return LOADRES_OK;
 }

@@ -26,7 +26,7 @@
 
 #include <cstring>
 #include <sstream>
-#include <zlib.h>
+// #include <zlib.h>
 
 using namespace gambatte;
 
@@ -70,7 +70,7 @@ GB::~GB() {
 	delete p_;
 }
 
-std::ptrdiff_t GB::runFor(gambatte::uint_least32_t *const videoBuf, std::ptrdiff_t const pitch,
+std::ptrdiff_t GB::runFor(uint16_t *const videoBuf, std::ptrdiff_t const pitch,
                           gambatte::uint_least32_t *const soundBuf, std::size_t &samples) {
 	if (!p_->cpu.loaded()) {
 		samples = 0;
@@ -229,17 +229,19 @@ int GB::loadBios(std::string const &biosfile, std::size_t size, unsigned crc) {
 		std::memcpy(maskedBiosBuffer, newBiosBuffer, sz);
 		maskedBiosBuffer[0xFD] = 0;
 
-		if (crc32(0, maskedBiosBuffer, sz) != crc)
-			return -3;
+		// FIXME Hack out CRC32 check -- where does this come from? zlib?
+
+		// if (crc32(0, maskedBiosBuffer, sz) != crc)
+		// 	return -3;
 	}
 
-	if ((p_->loadflags & GBA_FLAG) && (crc32(0, newBiosBuffer, sz) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal 
-		newBiosBuffer[0xF3] ^= 0x03;
-		for (int i = 0xF5; i < 0xFB; i++)
-			newBiosBuffer[i] = newBiosBuffer[i + 1];
+	// if ((p_->loadflags & GBA_FLAG) && (crc32(0, newBiosBuffer, sz) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal 
+	// 	newBiosBuffer[0xF3] ^= 0x03;
+	// 	for (int i = 0xF5; i < 0xFB; i++)
+	// 		newBiosBuffer[i] = newBiosBuffer[i + 1];
 
-		newBiosBuffer[0xFB] ^= 0x74;
-	}
+	// 	newBiosBuffer[0xFB] ^= 0x74;
+	// }
 
 	p_->cpu.setBios(newBiosBuffer, sz);
 	return 0;

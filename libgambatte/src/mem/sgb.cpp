@@ -27,15 +27,16 @@ Sgb::Sgb()
 , pending(0xFF)
 {
 	// FIXME: this code is ugly
-	int i = 0;
-	for (int b = 0; b < 32; b++)
-		for (int g = 0; g < 32; g++)
-			for (int r = 0; r < 32; r++)
-				cgbColorsRgb32_[i++] = ((b * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((r * 255 + 15) / 31) << 16) | 255 << 24;
+	// int i = 0;
+	// for (int b = 0; b < 32; b++)
+	// 	for (int g = 0; g < 32; g++)
+	// 		for (int r = 0; r < 32; r++)
+	// 			cgbColorsRgb32_[i++] = ((b * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((r * 255 + 15) / 31) << 16) | 255 << 24;
 }
 
 unsigned long Sgb::gbcToRgb32(unsigned const bgr15) {
-	return cgbColorsRgb32_[bgr15 & 0x7FFF];
+	return (bgr15 & 0x1f) | (bgr15 & 0x7fe) << 1; // RGB565.
+	// return cgbColorsRgb32_[bgr15 & 0x7FFF];
 }
 
 void Sgb::setStatePtrs(SaveState &state) {
@@ -260,7 +261,7 @@ void Sgb::pal_set() {
 }
 
 SYNCFUNC(Sgb) {
-	NSS(cgbColorsRgb32_);
+	// NSS(cgbColorsRgb32_);
 
 	NSS(transfer);
 	NSS(packet);

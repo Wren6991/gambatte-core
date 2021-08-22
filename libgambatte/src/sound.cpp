@@ -127,15 +127,17 @@ void PSG::loadState(SaveState const &state) {
 	enabled_ = state.mem.ioamhram.get()[0x126] >> 7 & 1;
 }
 
+// FIXME sound output has been hacked out, we don't have the RAM for these huge buffers
+
 inline void PSG::accumulateChannels(unsigned long const cycles) {
-	unsigned long const cc = cycleCounter_;
-	uint_least32_t *const buf = buffer_ + bufferPos_;
-	std::memset(buf, 0, cycles * sizeof *buf);
-	ch1_.update(buf, soVol_, cc, cc + cycles);
-	ch2_.update(buf, soVol_, cc, cc + cycles);
-	ch3_.update(buf, soVol_, cc, cc + cycles);
-	ch4_.update(buf, soVol_, cc, cc + cycles);
-	cycleCounter_ = (cc + cycles) % SoundUnit::counter_max;
+	// unsigned long const cc = cycleCounter_;
+	// uint_least32_t *const buf = buffer_ + bufferPos_;
+	// std::memset(buf, 0, cycles * sizeof *buf);
+	// ch1_.update(buf, soVol_, cc, cc + cycles);
+	// ch2_.update(buf, soVol_, cc, cc + cycles);
+	// ch3_.update(buf, soVol_, cc, cc + cycles);
+	// ch4_.update(buf, soVol_, cc, cc + cycles);
+	// cycleCounter_ = (cc + cycles) % SoundUnit::counter_max;
 }
 
 void PSG::generateSamples(unsigned long const cpuCc, bool const doubleSpeed) {
@@ -156,45 +158,45 @@ void PSG::resetCounter(unsigned long newCc, unsigned long oldCc, bool doubleSpee
 }
 
 std::size_t PSG::fillBuffer() {
-	uint_least32_t sum = rsum_;
-	uint_least32_t *b = buffer_;
-	std::size_t n = bufferPos_;
+	// uint_least32_t sum = rsum_;
+	// uint_least32_t *b = buffer_;
+	// std::size_t n = bufferPos_;
 
-	if (std::size_t n2 = n >> 3) {
-		n -= n2 << 3;
+	// if (std::size_t n2 = n >> 3) {
+	// 	n -= n2 << 3;
 
-		do {
-			sum += b[0];
-			b[0] = sum ^ 0x8000;
-			sum += b[1];
-			b[1] = sum ^ 0x8000;
-			sum += b[2];
-			b[2] = sum ^ 0x8000;
-			sum += b[3];
-			b[3] = sum ^ 0x8000;
-			sum += b[4];
-			b[4] = sum ^ 0x8000;
-			sum += b[5];
-			b[5] = sum ^ 0x8000;
-			sum += b[6];
-			b[6] = sum ^ 0x8000;
-			sum += b[7];
-			b[7] = sum ^ 0x8000;
+	// 	do {
+	// 		sum += b[0];
+	// 		b[0] = sum ^ 0x8000;
+	// 		sum += b[1];
+	// 		b[1] = sum ^ 0x8000;
+	// 		sum += b[2];
+	// 		b[2] = sum ^ 0x8000;
+	// 		sum += b[3];
+	// 		b[3] = sum ^ 0x8000;
+	// 		sum += b[4];
+	// 		b[4] = sum ^ 0x8000;
+	// 		sum += b[5];
+	// 		b[5] = sum ^ 0x8000;
+	// 		sum += b[6];
+	// 		b[6] = sum ^ 0x8000;
+	// 		sum += b[7];
+	// 		b[7] = sum ^ 0x8000;
 
-			b += 8;
-		} while (--n2);
-	}
+	// 		b += 8;
+	// 	} while (--n2);
+	// }
 
-	while (n--) {
-		sum += *b;
-		// xor away the initial rsum value of 0x8000 (which prevents
-		// borrows from the high word) from the low word
-		*b++ = sum ^ 0x8000;
-	}
+	// while (n--) {
+	// 	sum += *b;
+	// 	// xor away the initial rsum value of 0x8000 (which prevents
+	// 	// borrows from the high word) from the low word
+	// 	*b++ = sum ^ 0x8000;
+	// }
 
-	rsum_ = sum;
+	// rsum_ = sum;
 
-	return bufferPos_;
+	// return bufferPos_;
 }
 
 static bool isBigEndianSampleOrder() {

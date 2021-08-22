@@ -25,6 +25,8 @@ Free Software Foundation, Inc.,
 #include "transfer_ptr.h"
 #include <string>
 
+struct file_entry {const char *name; const char *resource; size_t size;};
+
 namespace gambatte {
 
 class File {
@@ -34,6 +36,8 @@ public:
 	virtual std::size_t size() const = 0;
 	virtual void read(char *buffer, std::size_t amount) = 0;
 	virtual bool fail() const = 0;
+	// Get pointer to raw flash resource, for zero-copy read-only use
+	virtual const char* getraw() const = 0;
 };
 
 transfer_ptr<File> newFileInstance(std::string const &filepath);

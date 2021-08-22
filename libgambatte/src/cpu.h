@@ -40,7 +40,7 @@ public:
 
 	bool getMemoryArea(int which, unsigned char **data, int *length) { return mem_.getMemoryArea(which, data, length); }
 
-	void setVideoBuffer(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
+	void setVideoBuffer(uint16_t *videoBuf, std::ptrdiff_t pitch) {
 		mem_.setVideoBuffer(videoBuf, pitch);
 	}
 

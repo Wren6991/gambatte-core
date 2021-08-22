@@ -320,7 +320,7 @@ public:
 	void setSoundBuffer(uint_least32_t *buf) { psg_.setBuffer(buf); }
 	std::size_t fillSoundBuffer(unsigned long cc);
 
-	void setVideoBuffer(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
+	void setVideoBuffer(uint16_t *videoBuf, std::ptrdiff_t pitch) {
 		lcd_.setVideoBuffer(videoBuf, pitch);
 		sgb_.setVideoBuffer(videoBuf, pitch);
 	}

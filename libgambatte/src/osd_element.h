@@ -20,6 +20,7 @@
 #define OSD_ELEMENT_H
 
 #include "gbint.h"
+#include <cstdint>
 
 namespace gambatte {
 
@@ -34,7 +35,7 @@ public:
 	unsigned w() const { return w_; }
 	unsigned h() const { return h_; }
 	Opacity opacity() const { return opacity_; }
-	virtual uint_least32_t const * update() = 0;
+	virtual uint16_t const * update() = 0;
 
 protected:
 	explicit OsdElement(unsigned x = 0, unsigned y = 0, unsigned w = 0, unsigned h = 0,

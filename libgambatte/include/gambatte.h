@@ -25,6 +25,7 @@
 #include "../src/newstate.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 
 namespace gambatte {
@@ -132,7 +133,7 @@ public:
 	  * @return sample offset in audioBuf at which the video frame was completed, or -1
 	  *         if no new video frame was completed.
 	  */
-	std::ptrdiff_t runFor(gambatte::uint_least32_t *videoBuf, std::ptrdiff_t pitch,
+	std::ptrdiff_t runFor(uint16_t *videoBuf, std::ptrdiff_t pitch,
 	                      gambatte::uint_least32_t *audioBuf, std::size_t &samples);
 
 	/**

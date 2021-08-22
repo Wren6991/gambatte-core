@@ -23,7 +23,7 @@
 
 #include <cstring>
 #include <fstream>
-#include <zlib.h>
+// #include <zlib.h>
 //#include <stdio.h>
 
 using namespace gambatte;
@@ -956,8 +956,10 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 	bool cgb = false;
 
 	{
-		unsigned char header[0x150];
-		rom->read(reinterpret_cast<char *>(header), sizeof header);
+		// Please don't read 300 bytes onto the stack
+		const unsigned char *header = (const unsigned char*)rom->getraw();
+		// unsigned char header[0x150];
+		// rom->read(reinterpret_cast<char *>(header), sizeof header);
 
 		switch (header[0x0147]) {
 		case 0x00: type = type_plain; break;
@@ -1041,12 +1043,14 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 	rtc_.set(false, 0);
 	huc3_.set(false);
 
-	rom->rewind();
-	rom->read(reinterpret_cast<char*>(memptrs_.romdata()), filesize / rombank_size() * rombank_size());
-	std::memset(memptrs_.romdata() + filesize / rombank_size() * rombank_size(),
-	            0xFF,
-	            (rombanks - filesize / rombank_size()) * rombank_size());
-	enforce8bit(memptrs_.romdata(), rombanks * rombank_size());
+	// Zero-copy use of flash-resident ROM image to save RAM footprint:
+	memptrs_.SetRomResource(rom->getraw());
+	// rom->rewind();
+	// rom->read(reinterpret_cast<char*>(memptrs_.romdata()), filesize / rombank_size() * rombank_size());
+	// std::memset(memptrs_.romdata() + filesize / rombank_size() * rombank_size(),
+	//             0xFF,
+	//             (rombanks - filesize / rombank_size()) * rombank_size());
+	// enforce8bit(memptrs_.romdata(), rombanks * rombank_size());
 
 	if (rom->fail())
 		return LOADRES_IO_ERROR;
@@ -1106,9 +1110,10 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 	bool cgb = false;
 
 	{
-		unsigned char header[0x150];
+		const char *header = romfiledata;
+		// unsigned char header[0x150];
 		if (romfilelength >= sizeof header)
-			std::memcpy(header, romfiledata, sizeof header);
+			;// pass     std::memcpy(header, romfiledata, sizeof header);
 		else
 			return LOADRES_IO_ERROR;
 
@@ -1191,11 +1196,13 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 	rtc_.set(false, 0);
 	huc3_.set(false);
 	
-	std::memcpy(memptrs_.romdata(), romfiledata, (filesize / rombank_size() * rombank_size()));
-	std::memset(memptrs_.romdata() + filesize / rombank_size() * rombank_size(),
-	            0xFF,
-	            (rombanks - filesize / rombank_size()) * rombank_size());
-	enforce8bit(memptrs_.romdata(), rombanks * rombank_size());
+	// Zero-copy
+	memptrs_.SetRomResource(romfiledata);
+	// std::memcpy(memptrs_.romdata(), romfiledata, (filesize / rombank_size() * rombank_size()));
+	// std::memset(memptrs_.romdata() + filesize / rombank_size() * rombank_size(),
+	//             0xFF,
+	//             (rombanks - filesize / rombank_size()) * rombank_size());
+	// enforce8bit(memptrs_.romdata(), rombanks * rombank_size());
 
 	switch (type) {
 	case type_plain: mbc_.reset(new Mbc0(memptrs_)); break;
@@ -1244,7 +1251,9 @@ int Cartridge::saveSavedataLength(bool isDeterministic) {
 }
 
 void Cartridge::loadSavedata(unsigned long const cc) {
-	std::string const &sbp = saveBasePath();
+	// FIXME no read/write filesystem (can probably just use a fixed block of flash?)
+#if 0
+	// std::string const &sbp = saveBasePath();
 
 	if (hasBattery(memptrs_.romdata()[0x147])) {
 		std::ifstream file((sbp + ".sav").c_str(), std::ios::binary | std::ios::in);
@@ -1304,9 +1313,12 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 			}
 		}
 	}
+#endif
 }
 
 void Cartridge::saveSavedata(unsigned long const cc) {
+	// FIXME no read/write filesystem
+#if 0
 	std::string const &sbp = saveBasePath();
 
 	if (hasBattery(memptrs_.romdata()[0x147])) {
@@ -1345,9 +1357,11 @@ void Cartridge::saveSavedata(unsigned long const cc) {
 			file.put(rtcRegs[S+L]     & 0x3F);
 		}
 	}
+#endif
 }
 
 void Cartridge::saveSavedata(char* dest, unsigned long const cc, bool isDeterministic) {
+#if 0
 	if (hasBattery(memptrs_.romdata()[0x147])) {
 		int length = memptrs_.rambankdataend() - memptrs_.rambankdata();
 		std::memcpy(dest, memptrs_.rambankdata(), length);
@@ -1383,9 +1397,13 @@ void Cartridge::saveSavedata(char* dest, unsigned long const cc, bool isDetermin
 			*dest++ = (rtcRegs[S+L]     & 0x3F);
 		}
 	}
+#endif
 }
 
 void Cartridge::loadSavedata(char const *data, unsigned long const cc, bool isDeterministic) {
+#if 1
+	
+#else
 	if (hasBattery(memptrs_.romdata()[0x147])) {
 		int length = memptrs_.rambankdataend() - memptrs_.rambankdata();
 		std::memcpy(memptrs_.rambankdata(), data, length);
@@ -1429,6 +1447,7 @@ void Cartridge::loadSavedata(char const *data, unsigned long const cc, bool isDe
 			rtc_.setBaseTime(basetime, cc);
 		}
 	}
+#endif
 }
 
 bool Cartridge::getMemoryArea(int which, unsigned char **data, int *length) const {
@@ -1441,7 +1460,8 @@ bool Cartridge::getMemoryArea(int which, unsigned char **data, int *length) cons
 		*length = memptrs_.vramdataend() - memptrs_.vramdata();
 		return true;
 	case 1:
-		*data = memptrs_.romdata();
+		// Cast away the const (!!!) -- let's hope the code doesn't try to modify it
+		*data = (unsigned char*)memptrs_.romdata();
 		*length = memptrs_.romdataend() - memptrs_.romdata();
 		return true;
 	case 2:
@@ -1458,6 +1478,9 @@ bool Cartridge::getMemoryArea(int which, unsigned char **data, int *length) cons
 }
 
 void Cartridge::applyGameGenie(std::string const &code) {
+	// Removed as it tries to write to the ROM image (which is genuinely
+	// read-only on a microcontroller)
+#if 0
 	if (6 < code.length()) {
 		unsigned const val = (asHex(code[0]) << 4 | asHex(code[1])) & 0xFF;
 		unsigned const addr = (    asHex(code[2])        <<  8
@@ -1479,9 +1502,12 @@ void Cartridge::applyGameGenie(std::string const &code) {
 			}
 		}
 	}
+#endif
 }
 
 void Cartridge::setGameGenie(std::string const &codes) {
+	// Can't write ROM image
+#if 0
 	if (loaded()) {
 		for (std::vector<AddrData>::reverse_iterator it =
 				ggUndoList_.rbegin(), end = ggUndoList_.rend(); it != end; ++it) {
@@ -1497,13 +1523,15 @@ void Cartridge::setGameGenie(std::string const &codes) {
 			applyGameGenie(code);
 		}
 	}
+#endif
 }
 
 PakInfo const Cartridge::pakInfo(bool const multipakCompat) const {
 	if (loaded()) {
 		unsigned crc = 0L;
 		unsigned const rombs = rombanks(memptrs_);
-		crc = crc32(crc, memptrs_.romdata(), rombs*0x4000ul);
+		// Where is this crc32 supposed to come from? zlib?
+		// crc = crc32(crc, memptrs_.romdata(), rombs*0x4000ul);
 		return PakInfo(multipakCompat && presumedMulti64Mbc1(memptrs_.romdata(), rombs),
 		               rombs,
 			       crc,

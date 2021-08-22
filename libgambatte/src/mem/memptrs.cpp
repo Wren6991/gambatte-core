@@ -90,15 +90,18 @@ MemPtrs::MemPtrs()
 void MemPtrs::reset(unsigned const rombanks, unsigned const rambanks, unsigned const wrambanks) {
 	int const num_disabled_ram_areas = 2;
 	memchunk_.reset(
-		  pre_rom_pad_size()
-		+ rombanks * rombank_size()
+		// Leave the ROM in flash, don't copy to RAM.
+		// pre_rom_pad_size()
+		// + rombanks * rombank_size()
 		+ max_num_vrambanks * vrambank_size()
 		+ rambanks * rambank_size()
 		+ wrambanks * wrambank_size()
 		+ num_disabled_ram_areas * rambank_size());
 
+	n_rom_banks_ = rombanks;
+
 	romdata_[0] = romdata();
-	rambankdata_ = romdata_[0] + rombanks * rombank_size() + max_num_vrambanks * vrambank_size();
+	rambankdata_ = memchunk_ + max_num_vrambanks * vrambank_size();
 	wramdata_[0] = rambankdata_ + rambanks * rambank_size();
 	wramdataend_ = wramdata_[0] + wrambanks * wrambank_size();
 
