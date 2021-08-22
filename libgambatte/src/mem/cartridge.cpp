@@ -1038,13 +1038,18 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 
 	defaultSaveBasePath_.clear();
 	ggUndoList_.clear();
+
+	// Zero-copy ROM init. Must be *before* ptrs reset, as this determines the
+	// address, not just the contents, of the ROM buffer.
+	memptrs_.SetRomResource(rom->getraw());
+
 	mbc_.reset();
 	memptrs_.reset(rombanks, rambanks, cgb ? 8 : 2);
 	rtc_.set(false, 0);
 	huc3_.set(false);
 
-	// Zero-copy use of flash-resident ROM image to save RAM footprint:
-	memptrs_.SetRomResource(rom->getraw());
+	// No need to read ROM contents into RAM, we've set up a reference to the
+	// flash-resident ROM image:
 	// rom->rewind();
 	// rom->read(reinterpret_cast<char*>(memptrs_.romdata()), filesize / rombank_size() * rombank_size());
 	// std::memset(memptrs_.romdata() + filesize / rombank_size() * rombank_size(),
@@ -1191,13 +1196,15 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 	if (multicartCompat && type == type_plain && rombanks > 2)
 		type = type_wisdomtree; // todo: better hack than this (probably should just use crc32s?)
 
+	// Zero-copy ROM init. Must be *before* ptrs reset, as this determines the
+	// address, not just the contents, of the ROM buffer.
+	memptrs_.SetRomResource(romfiledata);
+
 	mbc_.reset();
 	memptrs_.reset(rombanks, rambanks, cgb ? 8 : 2);
 	rtc_.set(false, 0);
 	huc3_.set(false);
 	
-	// Zero-copy
-	memptrs_.SetRomResource(romfiledata);
 	// std::memcpy(memptrs_.romdata(), romfiledata, (filesize / rombank_size() * rombank_size()));
 	// std::memset(memptrs_.romdata() + filesize / rombank_size() * rombank_size(),
 	//             0xFF,

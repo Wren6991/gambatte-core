@@ -76,11 +76,11 @@ public:
 	OamDmaSrc oamDmaSrc() const { return oamDmaSrc_; }
 	bool isInOamDmaConflictArea(unsigned p) const;
 
-	// Replaces the read() into RAM buffer (!)
+	// Replaces the read() into RAM buffer (!) which is space-prohibitive on
+	// microcontrollers. Note reset() must be called after setting this
+	// function, to reinitialise rmem etc.
 	void SetRomResource(const char *res) {
 		rom_flash_ptr_ = res;
-		// Need to initialise this too because it gets set to garbage during reset():
-		romdata_[0] = (const unsigned char*)res;
 	}
 
 	void setRombank0(unsigned bank);

@@ -52,6 +52,7 @@ long CPU::runFor(unsigned long const cycles) {
 
 	if (cycleCounter_ & 0x80000000)
 		cycleCounter_ = mem_.resetCounters(cycleCounter_);
+	printf("cycleCounter: %d\n", cycleCounter_);
 
 	return csb;
 }

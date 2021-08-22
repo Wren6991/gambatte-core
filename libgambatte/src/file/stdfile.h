@@ -50,8 +50,8 @@ public:
 				match = match && *p == *q;
 			} while (*p++ && *q++);
 
-			if (!match)
-			{
+			if (match) {
+				printf("Found \"%s\" @%p\n", (&file_manifest)[i].name, (&file_manifest)[i].resource);
 				fsize_ = (&file_manifest)[i].size;
 				flash_resource_ = (&file_manifest)[i].resource;
 				break;

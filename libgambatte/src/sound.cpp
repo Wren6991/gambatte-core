@@ -197,6 +197,7 @@ std::size_t PSG::fillBuffer() {
 	// rsum_ = sum;
 
 	// return bufferPos_;
+	return 0;
 }
 
 static bool isBigEndianSampleOrder() {
