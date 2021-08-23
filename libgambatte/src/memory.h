@@ -244,11 +244,11 @@ public:
 			p &= 0xA1FF;
 
 
+		// RP2040: discard writes with branch instead of a write wasteland
+		// buffer, saves 16k. (FIXME does this break RTC?)
+		if (cart_.disabledRam() && (p >= mm_sram_begin && p < mm_wram_begin))
+			return;
 		if (cart_.wmem(p >> 12)) {
-			// RP2040: discard writes with branch instead of a write wasteland
-			// buffer, saves 16k.
-			if (cart_.disabledRam() && (p >= mm_sram_begin && p < mm_wram_begin))
-				return;
 			cart_.wmem(p >> 12)[p] = data;
 		}
 		else {
