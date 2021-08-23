@@ -243,10 +243,17 @@ public:
 		if (cart_.isMbc2() && (p >= mm_sram_begin && p < mm_wram_begin))
 			p &= 0xA1FF;
 
-		if (cart_.wmem(p >> 12))
+
+		if (cart_.wmem(p >> 12)) {
+			// RP2040: discard writes with branch instead of a write wasteland
+			// buffer, saves 16k.
+			if (cart_.disabledRam() && (p >= mm_sram_begin && p < mm_wram_begin))
+				return;
 			cart_.wmem(p >> 12)[p] = data;
-		else
+		}
+		else {
 			nontrivial_write(p, data, cc);
+		}
 
 		if (writeCallback_)
 			writeCallback_(p, callbackCycleOffset(cc));

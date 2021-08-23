@@ -59,7 +59,7 @@ public:
 
 	unsigned char const * rmem(unsigned area) const { return rmem_[area]; }
 	unsigned char * wmem(unsigned area) const { return wmem_[area]; }
-	// Patch: romdata needs to be const because it's in flash
+	// RP2040: romdata needs to be const because it's in flash
 	const unsigned char * romdata() const { return (const unsigned char*)rom_flash_ptr_; }
 	const unsigned char * romdata(unsigned area) const { return romdata_[area]; }
 	const unsigned char * romdataend() const { return romdata() +  n_rom_banks_ * rombank_size(); }
@@ -69,16 +69,15 @@ public:
 	unsigned char * rambankdataend() const { return wramdata_[0]; }
 	unsigned char * wramdata(unsigned area) const { return wramdata_[area]; }
 	unsigned char * wramdataend() const { return wramdataend_; }
-	unsigned char const * rdisabledRam() const { return rdisabledRamw(); }
 	unsigned char const * rsrambankptr() const { return rsrambankptr_; }
 	unsigned char * wsrambankptr() const { return wsrambankptr_; }
 	unsigned char * vrambankptr() const { return vrambankptr_; }
 	OamDmaSrc oamDmaSrc() const { return oamDmaSrc_; }
 	bool isInOamDmaConflictArea(unsigned p) const;
 
-	// Replaces the read() into RAM buffer (!) which is space-prohibitive on
-	// microcontrollers. Note reset() must be called after setting this
-	// function, to reinitialise rmem etc.
+	// RP2040: Replaces the read() into RAM buffer (!) which is
+	// space-prohibitive on microcontrollers. Note reset() must be called
+	// after setting this function, to reinitialise rmem etc.
 	void SetRomResource(const char *res) {
 		rom_flash_ptr_ = res;
 	}
@@ -116,8 +115,12 @@ private:
 
 	static std::size_t pre_rom_pad_size() { return mm_rom1_begin; }
 	void disconnectOamDmaAreas();
-	unsigned char * rdisabledRamw() const { return wramdataend_; }
-	unsigned char * wdisabledRam()  const { return wramdataend_ + rambank_size(); }
+
+	// RP2040: no disabled RAM region (waste of 16k of SRAM), instead rely on mbc's enabled check.
+
+	// unsigned char * rdisabledRamw() const { return wramdataend_; }
+	// unsigned char * wdisabledRam()  const { return wramdataend_ + rambank_size(); }
+	// unsigned char const * rdisabledRam() const { return rdisabledRamw(); }
 };
 
 inline bool isCgb(MemPtrs const &memptrs) {

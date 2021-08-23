@@ -90,13 +90,15 @@ MemPtrs::MemPtrs()
 void MemPtrs::reset(unsigned const rombanks, unsigned const rambanks, unsigned const wrambanks) {
 	int const num_disabled_ram_areas = 2;
 	memchunk_.reset(
-		// Leave the ROM in flash, don't copy to RAM.
+		// RP2040: Leave the ROM in flash, don't copy to RAM.
 		// pre_rom_pad_size()
 		// + rombanks * rombank_size()
 		+ max_num_vrambanks * vrambank_size()
 		+ rambanks * rambank_size()
 		+ wrambanks * wrambank_size()
-		+ num_disabled_ram_areas * rambank_size());
+		// RP2040: don't allocate RAM just to discard writes!
+		// + num_disabled_ram_areas * rambank_size()
+		);
 
 	n_rom_banks_ = rombanks;
 
@@ -105,7 +107,7 @@ void MemPtrs::reset(unsigned const rombanks, unsigned const rambanks, unsigned c
 	wramdata_[0] = rambankdata_ + rambanks * rambank_size();
 	wramdataend_ = wramdata_[0] + wrambanks * wrambank_size();
 
-	std::fill_n(rdisabledRamw(), rambank_size(), 0xFF);
+	// std::fill_n(rdisabledRamw(), rambank_size(), 0xFF);
 
 	oamDmaSrc_ = oam_dma_src_off;
 	rmem_[0x3] = rmem_[0x2] = rmem_[0x1] = rmem_[0x0] = romdata_[0];
@@ -141,15 +143,14 @@ void MemPtrs::setRambank(unsigned const flags, unsigned const rambank) {
 	if (!(flags & rtc_en)) {
 		srambankptr = rambankdata() != rambankdataend()
 			? rambankdata_ + rambank * rambank_size() - mm_sram_begin
-			: wdisabledRam() - mm_sram_begin;
+			: NULL;
 	}
 
-	rsrambankptr_ = (flags & read_en) && srambankptr != wdisabledRam() - mm_sram_begin
-		? srambankptr
-		: rdisabledRamw() - mm_sram_begin;
-	wsrambankptr_ = flags & write_en
-		? srambankptr
-		: wdisabledRam() - mm_sram_begin;
+	// RP2040: for disabled case we're relying on the MBC enable check in
+	// memory.h to discard writes and provide capacitive-latched reads. This
+	// avoids allocating a 16k wasteland buffer.
+	rsrambankptr_ = srambankptr;
+	wsrambankptr_ = srambankptr;
 	rmem_[0xB] = rmem_[0xA] = rsrambankptr_;
 	wmem_[0xB] = wmem_[0xA] = wsrambankptr_;
 	disconnectOamDmaAreas();
